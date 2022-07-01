@@ -29,12 +29,16 @@ public partial class Joystick : ContentView
         get => (float)OuterCircleView.WidthRequest;
         set
         {
-            OuterCircleView.WidthRequest = value + Offset * 2;
-            OuterCircleView.HeightRequest = value + Offset * 2;
-            JoystickCircleView.WidthRequest = value + Offset * 2;
-            JoystickCircleView.HeightRequest = value + Offset * 2;
+            var calculatedSize = value + Offset * 2;
+
+            OuterCircleView.WidthRequest = calculatedSize;
+            OuterCircleView.HeightRequest = calculatedSize;
+            JoystickCircleView.WidthRequest = calculatedSize;
+            JoystickCircleView.HeightRequest = calculatedSize;
+
             outerCircle.Radius = value / SizeFactor;
             joystickCircle.Radius = value / (SizeFactor * CircleJoystickSizeFactor);
+
             OuterCircleView.Invalidate();
             JoystickCircleView.Invalidate();
         }
@@ -62,11 +66,14 @@ public partial class Joystick : ContentView
         }
     }
 
+    public uint ReturnAnimation { get; set; }
+
     public Joystick()
 	{
 		InitializeComponent();
         StickColor = Colors.Blue;
         CircleColor = Colors.Black;
+        ReturnAnimation = 0;
         _state = JoystickState.Ready;
     }
 
@@ -81,13 +88,16 @@ public partial class Joystick : ContentView
             return;
 
         var point = joystickCircle.Position;
-        JoystickCircleView.TranslationX = point.X - joystickCircle.Center.X;
-        JoystickCircleView.TranslationY = point.Y - joystickCircle.Center.Y;
 
         joystickCircle.Reset();
         JoystickCircleView.Invalidate();
 
-        JoystickCircleView.TranslateTo(0, 0);
+        if (ReturnAnimation > 0)
+        {
+            JoystickCircleView.TranslationX = point.X - joystickCircle.Center.X;
+            JoystickCircleView.TranslationY = point.Y - joystickCircle.Center.Y;
+            JoystickCircleView.TranslateTo(0, 0, ReturnAnimation);
+        }
         _state = JoystickState.Ready;
     }
 
