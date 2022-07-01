@@ -40,9 +40,33 @@ public partial class Joystick : ContentView
         }
     }
 
+    private Color _stickColor;
+    public Color StickColor
+    {
+        get => _stickColor;
+        set
+        {
+            _stickColor = value;
+            joystickCircle.Color = value;
+        }
+    }
+
+    private Color _circleColor;
+    public Color CircleColor
+    {
+        get => _circleColor;
+        set
+        {
+            _circleColor = value;
+            outerCircle.Color = value;
+        }
+    }
+
     public Joystick()
 	{
 		InitializeComponent();
+        StickColor = Colors.Blue;
+        CircleColor = Colors.Black;
         _state = JoystickState.Ready;
     }
 

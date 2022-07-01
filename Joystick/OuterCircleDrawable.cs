@@ -1,33 +1,24 @@
 ﻿namespace MauiControls;
 
-class JoystickDrawable : IDrawable
+internal class OuterCircleDrawable : IDrawable
 {
-    private const int CircleJoystickSizeFactor = Joystick.CircleJoystickSizeFactor;
-    private float _radius;
     public float Radius
     {
         get => _radius;
         set
         {
             _radius = value;
-            Center = new PointF(_radius * CircleJoystickSizeFactor + Offset, _radius * CircleJoystickSizeFactor + Offset);
-            Position = Center;
+            _center = new PointF(_radius, _radius);
         }
     }
-    public PointF Center { get; private set; }
-
-    public PointF Position { get; set; }
-
     public float Offset { get; set; }
+    public Color Color { get; set; }
+    private float _radius;
+    private PointF _center;
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
-        canvas.FillColor = Colors.Blue;
-        canvas.FillCircle(Position, Radius);
-    }
-
-    public void Reset()
-    {
-        Position = Center;
+        canvas.StrokeColor = Color;
+        canvas.DrawCircle(_center.X + Offset, _center.Y + Offset, Radius);
     }
 }
