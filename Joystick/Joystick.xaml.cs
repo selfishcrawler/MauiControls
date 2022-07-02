@@ -68,12 +68,28 @@ public partial class Joystick : ContentView
 
     public uint ReturnAnimation { get; set; }
 
+    public event Action<object, JoystickActionEventArgs> JoystickMoved;
+    public event Action<object, JoystickActionEventArgs> JoystickInteractionStopped;
+
+    private float _unitConvertionFactor;
+    private AngleMeasure _angleMeasureUnits;
+    public AngleMeasure AngleMeasureUnits
+    {
+        get => _angleMeasureUnits;
+        set
+        {
+            _angleMeasureUnits = value;
+            _unitConvertionFactor = value == AngleMeasure.Radians ? 1 : 180 / MathF.PI;
+        }
+    }
+
     public Joystick()
 	{
 		InitializeComponent();
         StickColor = Colors.Blue;
         CircleColor = Colors.Black;
         ReturnAnimation = 0;
+        AngleMeasureUnits = AngleMeasure.Radians;
         _state = JoystickState.Ready;
     }
 
@@ -99,6 +115,9 @@ public partial class Joystick : ContentView
             JoystickCircleView.TranslateTo(0, 0, ReturnAnimation);
         }
         _state = JoystickState.Ready;
+        var eventArgs = new JoystickActionEventArgs();
+        JoystickMoved?.Invoke(this, eventArgs);
+        JoystickInteractionStopped?.Invoke(this, eventArgs);
     }
 
     private void JoystickCircleView_DragInteraction(object sender, TouchEventArgs e)
@@ -107,14 +126,32 @@ public partial class Joystick : ContentView
             return;
 
         var touchPoint = e.Touches[0];
-        if (touchPoint.Distance(joystickCircle.Center) > outerCircle.Radius)
+        var distance = touchPoint.Distance(joystickCircle.Center);
+        var angle = MathF.Atan2(touchPoint.Y - joystickCircle.Center.Y, touchPoint.X - joystickCircle.Center.X);
+        if (distance > outerCircle.Radius)
         {
-            var theta = MathF.Atan2(touchPoint.Y - joystickCircle.Center.Y, touchPoint.X - joystickCircle.Center.X);
-            touchPoint.X = joystickCircle.Center.X + outerCircle.Radius * MathF.Cos(theta);
-            touchPoint.Y = joystickCircle.Center.Y + outerCircle.Radius * MathF.Sin(theta);
+            touchPoint.X = joystickCircle.Center.X + outerCircle.Radius * MathF.Cos(angle);
+            touchPoint.Y = joystickCircle.Center.Y + outerCircle.Radius * MathF.Sin(angle);
+            distance = distance > 200 ? 200 : distance;
         }
 
         joystickCircle.Position = touchPoint;
         JoystickCircleView.Invalidate();
+
+        var eventArgs = new JoystickActionEventArgs()
+        {
+            Angle = NormalizeAngle(angle) * _unitConvertionFactor,
+            Deviation = distance,
+        };
+        JoystickMoved?.Invoke(this, eventArgs);
     }
+
+    private const float HalfPI = MathF.PI / 2.0f;
+    private float NormalizeAngle(float angle) => angle switch
+    {
+        >= 0 and <= MathF.PI => angle + HalfPI,
+        < 0 and >= -HalfPI => angle + HalfPI,
+        < -HalfPI and > -MathF.PI => angle + MathF.PI * 2.5f,
+        _ => 0,
+    };
 }
