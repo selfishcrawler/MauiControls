@@ -132,7 +132,7 @@ public partial class Joystick : ContentView
         {
             touchPoint.X = joystickCircle.Center.X + outerCircle.Radius * MathF.Cos(angle);
             touchPoint.Y = joystickCircle.Center.Y + outerCircle.Radius * MathF.Sin(angle);
-            distance = distance > 200 ? 200 : distance;
+            distance = distance > joystickCircle.Radius ? joystickCircle.Radius : distance;
         }
 
         joystickCircle.Position = touchPoint;
